@@ -1,23 +1,27 @@
+use std::sync::atomic::{AtomicUsize, Ordering};
+
 pub trait Input {
     fn value(&self) -> f64;
 }
 
-/// ConstantInput returns a constant as input.
-pub struct ConstantInput(f64);
+/// BinaryInput returns a binary value as input.
+pub struct BinaryInput(AtomicUsize);
 
-impl ConstantInput {
-    pub fn new(value: impl Into<f64>) -> Self {
-        Self(value.into())
+impl BinaryInput {
+    pub fn new(value: impl Into<i32>) -> Self {
+        let value = value.into();
+        assert!(value == 0 || value == 1);
+        Self(AtomicUsize::new(value as usize))
     }
 
-    pub fn replace_with(&mut self, value: impl Into<f64>) {
-        self.0 = value.into();
+    pub fn replace_with(&self, value: impl Into<usize>) {
+        self.0.store(value.into(), Ordering::SeqCst);
     }
 }
 
-impl Input for ConstantInput {
+impl Input for BinaryInput {
     fn value(&self) -> f64 {
-        self.0
+        self.0.load(Ordering::SeqCst) as f64
     }
 }
 
