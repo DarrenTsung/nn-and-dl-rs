@@ -45,22 +45,35 @@ impl Input for Perceptron {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::input::ConstantInput;
+    use crate::input::{ConstantInput, Input};
+
+    macro_rules! nand {
+        ($($input:expr),* $(,)*) => {
+            {
+                let mut nand = Perceptron::default().with_bias(3);
+                $(
+                    nand = nand.and_input($input, -2);
+                )*
+                nand
+            }
+        };
+    }
 
     #[test]
     fn nand_perceptron_works() {
-        macro_rules! nand {
-            ($input_0:expr, $input_1:expr) => {
-                Perceptron::default()
-                    .with_bias(3)
-                    .and_input(ConstantInput::new($input_0), -2)
-                    .and_input(ConstantInput::new($input_1), -2);
+        macro_rules! const_nand {
+            ($($input:expr),* $(,)*) => {
+                nand!(
+                    $(
+                        ConstantInput::new($input),
+                    )*
+                )
             };
         }
 
-        assert_eq!(nand!(0, 0).value(), 1.0);
-        assert_eq!(nand!(0, 1).value(), 1.0);
-        assert_eq!(nand!(1, 0).value(), 1.0);
-        assert_eq!(nand!(1, 1).value(), 0.0);
+        assert_eq!(const_nand!(0, 0).value(), 1.0);
+        assert_eq!(const_nand!(0, 1).value(), 1.0);
+        assert_eq!(const_nand!(1, 0).value(), 1.0);
+        assert_eq!(const_nand!(1, 1).value(), 0.0);
     }
 }
