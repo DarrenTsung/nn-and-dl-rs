@@ -46,6 +46,7 @@ impl Input for Perceptron {
 mod tests {
     use super::*;
     use crate::input::{BinaryInput, Input};
+    use std::sync::Arc;
 
     macro_rules! nand {
         ($($input:expr),* $(,)*) => {
@@ -54,8 +55,14 @@ mod tests {
                 $(
                     nand = nand.and_input($input, -2);
                 )*
-                nand
+                Arc::new(nand)
             }
+        };
+    }
+
+    macro_rules! nand_arc {
+        ($($input:expr),* $(,)*) => {
+            nand!($( Arc::clone(&$input), )*)
         };
     }
 
@@ -63,11 +70,7 @@ mod tests {
     fn nand_perceptron_works() {
         macro_rules! binary_nand {
             ($($input:expr),* $(,)*) => {
-                nand!(
-                    $(
-                        BinaryInput::new($input),
-                    )*
-                )
+                nand!($( BinaryInput::new($input), )*)
             };
         }
 
@@ -75,5 +78,59 @@ mod tests {
         assert_eq!(binary_nand!(0, 1).value(), 1.0);
         assert_eq!(binary_nand!(1, 0).value(), 1.0);
         assert_eq!(binary_nand!(1, 1).value(), 0.0);
+    }
+
+    #[test]
+    fn add_circuit_works() {
+        struct AddCircuit {
+            input_0: Arc<BinaryInput>,
+            input_1: Arc<BinaryInput>,
+
+            sum: Arc<Perceptron>,
+            carry: Arc<Perceptron>,
+        }
+
+        impl AddCircuit {
+            fn set_inputs(&self, input_0: usize, input_1: usize) {
+                self.input_0.replace_with(input_0);
+                self.input_1.replace_with(input_1);
+            }
+        }
+
+        let c = {
+            // i0        a0
+            //      mid         sum
+            // i1        a1
+            //         carry
+            let input_0 = Arc::new(BinaryInput::new(0));
+            let input_1 = Arc::new(BinaryInput::new(0));
+            let mid = nand_arc!(&input_0, &input_1);
+            let a0 = nand_arc!(&input_0, &mid);
+            let a1 = nand_arc!(&input_1, &mid);
+            let sum = nand_arc!(&a0, &a1);
+            let carry = nand_arc!(&mid, &mid);
+            AddCircuit {
+                input_0,
+                input_1,
+                sum,
+                carry,
+            }
+        };
+
+        c.set_inputs(0, 0);
+        assert_eq!(c.sum.value(), 0.0);
+        assert_eq!(c.carry.value(), 0.0);
+
+        c.set_inputs(1, 0);
+        assert_eq!(c.sum.value(), 1.0);
+        assert_eq!(c.carry.value(), 0.0);
+
+        c.set_inputs(0, 1);
+        assert_eq!(c.sum.value(), 1.0);
+        assert_eq!(c.carry.value(), 0.0);
+
+        c.set_inputs(1, 1);
+        assert_eq!(c.sum.value(), 0.0);
+        assert_eq!(c.carry.value(), 1.0);
     }
 }

@@ -1,7 +1,14 @@
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::Arc;
 
 pub trait Input {
     fn value(&self) -> f64;
+}
+
+impl<T: Input> Input for Arc<T> {
+    fn value(&self) -> f64 {
+        self.as_ref().value()
+    }
 }
 
 /// BinaryInput returns a binary value as input.
