@@ -54,6 +54,12 @@ impl ConstantInput {
     }
 }
 
+impl Default for ConstantInput {
+    fn default() -> Self {
+        Self::new(0.0)
+    }
+}
+
 impl Input for ConstantInput {
     fn value(&self) -> f64 {
         self.0.load(Ordering::SeqCst) as f64 / Self::CONVERSION_FACTOR

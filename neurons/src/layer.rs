@@ -8,6 +8,10 @@ impl<N> Layer<N> {
     pub fn new(items: Vec<N>) -> Self {
         Self { items }
     }
+
+    pub fn len(&self) -> usize {
+        self.items.len()
+    }
 }
 
 impl<N> std::ops::Index<usize> for Layer<N> {
