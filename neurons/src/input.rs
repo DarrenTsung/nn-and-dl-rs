@@ -1,24 +1,42 @@
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 
-pub trait Input {
+pub trait Input: BoxClone {
     fn value(&self) -> f64;
 }
 
-impl<T: Input> Input for Arc<T> {
+/// This trait is required to allow cloning Input trait objects (Box<dyn Input>).
+pub trait BoxClone {
+    fn box_clone(&self) -> Box<dyn Input>;
+}
+
+impl<T: Input + Clone + 'static> BoxClone for T {
+    fn box_clone(&self) -> Box<dyn Input> {
+        Box::new(self.clone())
+    }
+}
+
+impl Clone for Box<dyn Input> {
+    fn clone(&self) -> Box<dyn Input> {
+        self.box_clone()
+    }
+}
+
+impl<T: Input + 'static> Input for Arc<T> {
     fn value(&self) -> f64 {
         self.as_ref().value()
     }
 }
 
 /// BinaryInput returns a binary value as input.
-pub struct BinaryInput(AtomicUsize);
+#[derive(Clone)]
+pub struct BinaryInput(Arc<AtomicUsize>);
 
 impl BinaryInput {
     pub fn new(value: impl Into<i32>) -> Self {
         let value = value.into();
         assert!(value == 0 || value == 1);
-        Self(AtomicUsize::new(value as usize))
+        Self(Arc::new(AtomicUsize::new(value as usize)))
     }
 
     pub fn replace_with(&self, value: impl Into<usize>) {
@@ -33,16 +51,17 @@ impl Input for BinaryInput {
 }
 
 /// WeightedInput wraps an input source with a weight.
+#[derive(Clone)]
 pub struct WeightedInput {
     weight: f64,
     input: Box<dyn Input>,
 }
 
 impl WeightedInput {
-    pub fn new(input: impl Input + 'static, weight: impl Into<f64>) -> Self {
+    pub fn new(input: &(impl Input + 'static), weight: impl Into<f64>) -> Self {
         Self {
             weight: weight.into(),
-            input: Box::new(input),
+            input: input.box_clone(),
         }
     }
 }

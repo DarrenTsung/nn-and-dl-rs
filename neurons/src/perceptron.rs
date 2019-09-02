@@ -4,6 +4,7 @@ use crate::neuron::{Neuron, NeuronInputStrategy};
 /// Perceptron outputs a value of either (0, 1).
 pub type Perceptron = Neuron<PerceptronStrategy>;
 
+#[derive(Clone)]
 pub struct PerceptronStrategy;
 
 impl NeuronInputStrategy for PerceptronStrategy {
@@ -27,7 +28,6 @@ impl Default for Perceptron {
 mod tests {
     use super::*;
     use crate::input::{BinaryInput, Input};
-    use std::sync::Arc;
 
     macro_rules! nand {
         ($($input:expr),* $(,)*) => {
@@ -36,39 +36,30 @@ mod tests {
                 $(
                     nand = nand.and_input($input, -2);
                 )*
-                Arc::new(nand)
+                nand
             }
-        };
-    }
-
-    macro_rules! nand_arc {
-        ($($input:expr),* $(,)*) => {
-            nand!($( Arc::clone(&$input), )*)
         };
     }
 
     #[test]
     fn nand_perceptron_works() {
-        macro_rules! binary_nand {
-            ($($input:expr),* $(,)*) => {
-                nand!($( BinaryInput::new($input), )*)
-            };
-        }
+        let in_0 = BinaryInput::new(0);
+        let in_1 = BinaryInput::new(1);
 
-        assert_eq!(binary_nand!(0, 0).value(), 1.0);
-        assert_eq!(binary_nand!(0, 1).value(), 1.0);
-        assert_eq!(binary_nand!(1, 0).value(), 1.0);
-        assert_eq!(binary_nand!(1, 1).value(), 0.0);
+        assert_eq!(nand!(&in_0, &in_0).value(), 1.0);
+        assert_eq!(nand!(&in_0, &in_1).value(), 1.0);
+        assert_eq!(nand!(&in_1, &in_0).value(), 1.0);
+        assert_eq!(nand!(&in_1, &in_1).value(), 0.0);
     }
 
     #[test]
     fn add_circuit_works() {
         struct AddCircuit {
-            input_0: Arc<BinaryInput>,
-            input_1: Arc<BinaryInput>,
+            input_0: BinaryInput,
+            input_1: BinaryInput,
 
-            sum: Arc<Perceptron>,
-            carry: Arc<Perceptron>,
+            sum: Perceptron,
+            carry: Perceptron,
         }
 
         impl AddCircuit {
@@ -83,13 +74,13 @@ mod tests {
             //      mid         sum
             // i1        a1
             //         carry
-            let input_0 = Arc::new(BinaryInput::new(0));
-            let input_1 = Arc::new(BinaryInput::new(0));
-            let mid = nand_arc!(&input_0, &input_1);
-            let a0 = nand_arc!(&input_0, &mid);
-            let a1 = nand_arc!(&input_1, &mid);
-            let sum = nand_arc!(&a0, &a1);
-            let carry = nand_arc!(&mid, &mid);
+            let input_0 = BinaryInput::new(0);
+            let input_1 = BinaryInput::new(0);
+            let mid = nand!(&input_0, &input_1);
+            let a0 = nand!(&input_0, &mid);
+            let a1 = nand!(&input_1, &mid);
+            let sum = nand!(&a0, &a1);
+            let carry = nand!(&mid, &mid);
             AddCircuit {
                 input_0,
                 input_1,

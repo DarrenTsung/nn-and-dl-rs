@@ -4,6 +4,7 @@ use crate::neuron::{Neuron, NeuronInputStrategy};
 /// Sigmoid outputs a value between [0, 1].
 pub type Sigmoid = Neuron<SigmoidStrategy>;
 
+#[derive(Clone)]
 pub struct SigmoidStrategy;
 
 impl NeuronInputStrategy for SigmoidStrategy {

@@ -2,12 +2,13 @@ use crate::input::{Input, WeightedInput};
 
 /// NeuronInputStrategy determines how to compute the
 /// value returned by the neuron given the inputs and bias.
-pub trait NeuronInputStrategy {
+pub trait NeuronInputStrategy: Clone {
     fn value(&self, inputs: &[WeightedInput], bias: f64) -> f64;
 }
 
 /// A Neuron has N inputs and outputs a
 /// value based on the strategy defined.
+#[derive(Clone)]
 pub struct Neuron<S> {
     strategy: S,
 
@@ -31,13 +32,13 @@ impl<S> Neuron<S> {
     }
 
     /// Add an input to the Neuron and return itself.
-    pub fn and_input(mut self, input: impl Input + 'static, weight: impl Into<f64>) -> Self {
+    pub fn and_input(mut self, input: &(impl Input + 'static), weight: impl Into<f64>) -> Self {
         self.inputs.push(WeightedInput::new(input, weight));
         self
     }
 }
 
-impl<S: NeuronInputStrategy> Input for Neuron<S> {
+impl<S: NeuronInputStrategy + 'static> Input for Neuron<S> {
     fn value(&self) -> f64 {
         self.strategy.value(self.inputs.as_slice(), self.bias)
     }
