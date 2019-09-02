@@ -27,7 +27,7 @@ impl Default for Perceptron {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::input::{BinaryInput, Input};
+    use crate::input::{ConstantInput, Input};
 
     macro_rules! nand {
         ($($input:expr),* $(,)*) => {
@@ -43,8 +43,8 @@ mod tests {
 
     #[test]
     fn nand_perceptron_works() {
-        let in_0 = BinaryInput::new(0);
-        let in_1 = BinaryInput::new(1);
+        let in_0 = ConstantInput::new(0);
+        let in_1 = ConstantInput::new(1);
 
         assert_eq!(nand!(&in_0, &in_0).value(), 1.0);
         assert_eq!(nand!(&in_0, &in_1).value(), 1.0);
@@ -55,15 +55,15 @@ mod tests {
     #[test]
     fn add_circuit_works() {
         struct AddCircuit {
-            input_0: BinaryInput,
-            input_1: BinaryInput,
+            input_0: ConstantInput,
+            input_1: ConstantInput,
 
             sum: Perceptron,
             carry: Perceptron,
         }
 
         impl AddCircuit {
-            fn set_inputs(&self, input_0: usize, input_1: usize) {
+            fn set_inputs(&self, input_0: impl Into<f64>, input_1: impl Into<f64>) {
                 self.input_0.replace_with(input_0);
                 self.input_1.replace_with(input_1);
             }
@@ -74,8 +74,8 @@ mod tests {
             //      mid         sum
             // i1        a1
             //         carry
-            let input_0 = BinaryInput::new(0);
-            let input_1 = BinaryInput::new(0);
+            let input_0 = ConstantInput::new(0);
+            let input_1 = ConstantInput::new(0);
             let mid = nand!(&input_0, &input_1);
             let a0 = nand!(&input_0, &mid);
             let a1 = nand!(&input_1, &mid);
