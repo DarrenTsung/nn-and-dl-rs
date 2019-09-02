@@ -33,8 +33,12 @@ impl<S> Neuron<S> {
 
     /// Add an input to the Neuron and return itself.
     pub fn and_input(mut self, input: &(impl Input + 'static), weight: impl Into<f64>) -> Self {
-        self.inputs.push(WeightedInput::new(input, weight));
+        self.add_input(input, weight);
         self
+    }
+
+    pub fn add_input(&mut self, input: &(impl Input + 'static), weight: impl Into<f64>) {
+        self.inputs.push(WeightedInput::new(input, weight));
     }
 }
 
