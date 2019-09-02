@@ -1,4 +1,4 @@
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use std::sync::Arc;
 
 pub trait Input: BoxClone {
@@ -47,6 +47,38 @@ impl BinaryInput {
 impl Input for BinaryInput {
     fn value(&self) -> f64 {
         self.0.load(Ordering::SeqCst) as f64
+    }
+}
+
+/// ConstantInput returns a value between [0, 1] as input.
+#[derive(Clone)]
+pub struct ConstantInput(Arc<AtomicU64>);
+
+impl ConstantInput {
+    /// This controls the precision since we're storing it as a u64
+    const CONVERSION_FACTOR: f64 = 1_000_000_000_000.0;
+
+    pub fn new(value: impl Into<f64>) -> Self {
+        let instance = Self(Arc::new(AtomicU64::new(0)));
+        instance.replace_with(value);
+        instance
+    }
+
+    pub fn replace_with(&self, value: impl Into<f64>) {
+        let value = value.into();
+        assert!(
+            value >= 0.0 && value <= 1.0,
+            "value must be within [0, 1], got: {}",
+            value
+        );
+        let value = (value * Self::CONVERSION_FACTOR) as u64;
+        self.0.store(value, Ordering::SeqCst);
+    }
+}
+
+impl Input for ConstantInput {
+    fn value(&self) -> f64 {
+        self.0.load(Ordering::SeqCst) as f64 / Self::CONVERSION_FACTOR
     }
 }
 
