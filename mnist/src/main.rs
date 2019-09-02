@@ -1,21 +1,20 @@
 mod training_set;
 
-use crate::training_set::TrainingItem;
+use crate::training_set::*;
 
 fn main() -> Result<(), failure::Error> {
-    let mut training_items = TrainingItem::iter_from_files(
+    let training_set = TrainingSet::from_files(
         "./mnist/data/train-images-idx3-ubyte",
         "./mnist/data/train-labels-idx1-ubyte",
     )?;
+    println!("5th Item: {:?}", training_set[5]);
+    println!("Finished with training set.");
 
-    println!("5th Item: {:?}", training_items.nth(5).unwrap());
-    println!("Finished with training items.");
-
-    let _test_items = TrainingItem::iter_from_files(
+    let _test_set = TrainingSet::from_files(
         "./mnist/data/t10k-images-idx3-ubyte",
         "./mnist/data/t10k-labels-idx1-ubyte",
     )?;
-    println!("Finished with test items.");
+    println!("Finished with test set.");
 
     Ok(())
 }

@@ -12,26 +12,24 @@ pub struct TrainingItem {
     label: u8,
 }
 
-pub struct TrainingItemIter<S> {
-    image_src: S,
-    label_src: S,
-    number_of_pixels: i32,
+pub struct TrainingSet {
+    items: Vec<TrainingItem>,
 }
 
-impl TrainingItem {
+impl TrainingSet {
     /// Deserialize a training set for MNIST via
     /// format described: http://yann.lecun.com/exdb/mnist/
-    pub fn iter_from_files(
+    pub fn from_files(
         image_file: impl AsRef<Path>,
         label_file: impl AsRef<Path>,
-    ) -> Result<TrainingItemIter<File>, failure::Error> {
-        Self::iter_from_read(File::open(image_file)?, File::open(label_file)?)
+    ) -> Result<Self, failure::Error> {
+        Self::from_read(File::open(image_file)?, File::open(label_file)?)
     }
 
-    pub fn iter_from_read<R: Read>(
-        mut image_src: R,
-        mut label_src: R,
-    ) -> Result<TrainingItemIter<R>, failure::Error> {
+    pub fn from_read(
+        mut image_src: impl Read,
+        mut label_src: impl Read,
+    ) -> Result<Self, failure::Error> {
         if image_src.read_i32::<BigEndian>()? != 2051 {
             return Err(format_err!("Image source magic number does not match"));
         }
@@ -54,24 +52,24 @@ impl TrainingItem {
             height * width
         };
 
-        Ok(TrainingItemIter {
-            image_src,
-            label_src,
-            number_of_pixels,
-        })
+        let mut items = Vec::with_capacity(number_of_items as usize);
+        for _ in 0..number_of_items {
+            let mut image = vec![0u8; number_of_pixels as usize];
+            image_src.read_exact(&mut image)?;
+
+            let label = label_src.read_u8()?;
+
+            items.push(TrainingItem { image, label });
+        }
+
+        Ok(TrainingSet { items })
     }
 }
 
-impl<S: Read> Iterator for TrainingItemIter<S> {
-    type Item = TrainingItem;
+impl std::ops::Index<usize> for TrainingSet {
+    type Output = TrainingItem;
 
-    fn next(&mut self) -> Option<Self::Item> {
-        let image = (0..self.number_of_pixels)
-            .map(|_| self.image_src.read_u8().ok())
-            .collect::<Option<Vec<_>>>()?;
-
-        let label = self.label_src.read_u8().ok()?;
-
-        Some(TrainingItem { image, label })
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.items[i]
     }
 }
