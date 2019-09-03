@@ -1,5 +1,6 @@
 use byteorder::{BigEndian, ReadBytesExt};
 use failure::format_err;
+use rand::seq::SliceRandom;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
@@ -63,6 +64,11 @@ impl TrainingSet {
         }
 
         Ok(TrainingSet { items })
+    }
+
+    pub fn batch_iter(&mut self, batch_size: usize) -> std::slice::Chunks<TrainingItem> {
+        self.items.shuffle(&mut rand::thread_rng());
+        self.items.chunks(batch_size)
     }
 }
 
