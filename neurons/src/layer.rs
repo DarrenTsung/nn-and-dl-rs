@@ -1,4 +1,6 @@
 use crate::*;
+use rand::Rng;
+use rand_distr::StandardNormal;
 
 pub struct Layer<N> {
     items: Vec<N>,
@@ -26,7 +28,8 @@ impl<S> Layer<Neuron<S>> {
     pub fn connect(&mut self, other: &Layer<impl Input + 'static>) {
         for neuron in &mut self.items {
             for other_item in &other.items {
-                neuron.add_input(other_item, 0.0);
+                let weight: f64 = rand::thread_rng().sample(StandardNormal);
+                neuron.add_input(other_item, weight);
             }
         }
     }

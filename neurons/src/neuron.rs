@@ -1,4 +1,6 @@
 use crate::input::{Input, WeightedInput};
+use rand::Rng;
+use rand_distr::StandardNormal;
 
 /// NeuronInputStrategy determines how to compute the
 /// value returned by the neuron given the inputs and bias.
@@ -18,10 +20,11 @@ pub struct Neuron<S> {
 
 impl<S> Neuron<S> {
     pub fn new(strategy: S) -> Self {
+        let bias: f64 = rand::thread_rng().sample(StandardNormal);
         Self {
             strategy,
             inputs: vec![],
-            bias: 0.0,
+            bias,
         }
     }
 
