@@ -24,13 +24,22 @@ impl<N> std::ops::Index<usize> for Layer<N> {
     }
 }
 
-impl<S> Layer<Neuron<S>> {
+impl<N: NeuronLike> Layer<N> {
     pub fn connect(&mut self, other: &Layer<impl Input + 'static>) {
         for neuron in &mut self.items {
             for other_item in &other.items {
                 let weight: f64 = rand::thread_rng().sample(StandardNormal);
                 neuron.add_input(other_item, weight);
             }
+        }
+    }
+}
+
+impl<N> Layer<CachedInput<N>> {
+    /// Mark all CachedInputs in this layer as 'dirty'.
+    pub fn dirty(&self) {
+        for item in &self.items {
+            item.dirty();
         }
     }
 }

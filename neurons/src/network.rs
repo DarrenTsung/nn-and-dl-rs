@@ -2,8 +2,8 @@ use crate::*;
 
 pub struct Network {
     pub input: Layer<ConstantInput>,
-    _hidden: Vec<Layer<Sigmoid>>,
-    pub output: Layer<Sigmoid>,
+    hidden: Vec<Layer<CachedInput<Sigmoid>>>,
+    pub output: Layer<CachedInput<Sigmoid>>,
 }
 
 impl Network {
@@ -31,9 +31,19 @@ impl Network {
 
         Self {
             input,
-            _hidden: hidden,
+            hidden,
             output,
         }
+    }
+
+    /// Mark layers as dirty - call this after you change
+    /// the inputs to the network.
+    pub fn dirty(&self) {
+        for layer in &self.hidden {
+            layer.dirty();
+        }
+
+        self.output.dirty();
     }
 }
 
@@ -46,8 +56,8 @@ mod tests {
         let network = Network::new(vec![2, 3, 1]);
         assert_eq!(network.input.len(), 2);
 
-        assert_eq!(network._hidden.len(), 1);
-        assert_eq!(network._hidden[0].len(), 3);
+        assert_eq!(network.hidden.len(), 1);
+        assert_eq!(network.hidden[0].len(), 3);
 
         assert_eq!(network.output.len(), 1);
     }

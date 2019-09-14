@@ -18,6 +18,10 @@ pub struct Neuron<S> {
     bias: f64,
 }
 
+pub trait NeuronLike {
+    fn add_input(&mut self, input: &(impl Input + 'static), weight: impl Into<f64>);
+}
+
 impl<S> Neuron<S> {
     pub fn new(strategy: S) -> Self {
         let bias: f64 = rand::thread_rng().sample(StandardNormal);
@@ -39,8 +43,10 @@ impl<S> Neuron<S> {
         self.add_input(input, weight);
         self
     }
+}
 
-    pub fn add_input(&mut self, input: &(impl Input + 'static), weight: impl Into<f64>) {
+impl<S> NeuronLike for Neuron<S> {
+    fn add_input(&mut self, input: &(impl Input + 'static), weight: impl Into<f64>) {
         self.inputs.push(WeightedInput::new(input, weight));
     }
 }
