@@ -1,3 +1,4 @@
+mod cost;
 mod input;
 mod layer;
 mod network;
@@ -5,6 +6,7 @@ mod neuron;
 mod perceptron;
 mod sigmoid;
 
+pub use crate::cost::*;
 pub use crate::input::*;
 pub use crate::layer::*;
 pub use crate::network::*;
