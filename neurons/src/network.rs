@@ -36,6 +36,18 @@ impl Network {
         }
     }
 
+    pub fn set_input(&self, values: Vec<f64>) {
+        assert_eq!(values.len(), self.input.len());
+
+        for (index, const_input) in self.input.iter().enumerate() {
+            const_input.replace_with(values[index]);
+        }
+    }
+
+    pub fn output_values(&self) -> Vec<f64> {
+        self.output.iter().map(|n| n.value()).collect()
+    }
+
     /// Mark layers as dirty - call this after you change
     /// the inputs to the network.
     pub fn dirty(&self) {
@@ -60,5 +72,10 @@ mod tests {
         assert_eq!(network.hidden[0].len(), 3);
 
         assert_eq!(network.output.len(), 1);
+
+        network.set_input(vec![0.0, 1.0]);
+
+        let output_values = network.output_values();
+        assert_eq!(output_values.len(), 1);
     }
 }

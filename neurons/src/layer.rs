@@ -14,6 +14,10 @@ impl<N> Layer<N> {
     pub fn len(&self) -> usize {
         self.items.len()
     }
+
+    pub fn iter(&self) -> std::slice::Iter<N> {
+        self.items.iter()
+    }
 }
 
 impl<N> std::ops::Index<usize> for Layer<N> {
@@ -23,6 +27,16 @@ impl<N> std::ops::Index<usize> for Layer<N> {
         self.items.index(i)
     }
 }
+
+impl<'a, N> IntoIterator for &'a Layer<N> {
+    type Item = &'a N;
+    type IntoIter = std::slice::Iter<'a, N>;
+
+    fn into_iter(self) -> std::slice::Iter<'a, N> {
+        self.items.iter()
+    }
+}
+
 
 impl<N: NeuronLike> Layer<N> {
     pub fn connect(&mut self, other: &Layer<impl Input + 'static>) {
