@@ -22,6 +22,13 @@ pub fn sigmoid(f: f64) -> f64 {
     1.0 / (1.0 + E.powf(-f))
 }
 
+/// The derivative of the sigmoid function.
+#[inline]
+pub fn sigmoid_prime(f: f64) -> f64 {
+    let f_sigmoid = sigmoid(f);
+    f_sigmoid * (1.0 - f_sigmoid)
+}
+
 impl Default for Sigmoid {
     fn default() -> Self {
         Neuron::new(SigmoidStrategy)
